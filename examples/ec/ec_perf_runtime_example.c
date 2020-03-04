@@ -620,7 +620,7 @@ int main(int argc, char *argv[])
             run_threads(&enc_barrier);
         }
         perf_stop(&start);
-        printf("ec_perf_runtime_example: ");
+        printf("ec_perf_encode: ");
         perf_print(start, (long long)(sz) * (m) * rtest);
 
 
@@ -696,9 +696,6 @@ int main(int argc, char *argv[])
             run_threads(&dec_barrier);
         }
         perf_stop(&start);
-        printf("ec_perf_runtime_example: ");
-        perf_print(start, (long long)(sz) * (m) * rtest);
-        printf("end decoding\n");
 
     }else{
         switch(instr)
@@ -712,7 +709,7 @@ int main(int argc, char *argv[])
                     ec_encode_data_sse(sz, k, m - k, g_tbls, buffs, &buffs[k]);
                 }
                 perf_stop(&start);
-                printf("ec_perf_runtime_example: ");
+                printf("ec_perf_encode: ");
                 perf_print(start, (long long)(sz) * (m) * rtest);
                 // Start decode test
                 perf_start(&start);
@@ -750,7 +747,7 @@ int main(int argc, char *argv[])
                     ec_encode_data_avx(sz, k, m - k, g_tbls, buffs, &buffs[k]);
                 }
                 perf_stop(&start);
-                printf("ec_perf_runtime_example: ");
+                printf("ec_perf_encode: ");
                 perf_print(start, (long long)(sz) * (m) * rtest);
 
                 // Start decode test
@@ -789,7 +786,7 @@ int main(int argc, char *argv[])
                     ec_encode_data_avx2(sz, k, m - k, g_tbls, buffs, &buffs[k]);
                 }
                 perf_stop(&start);
-                printf("ec_perf_runtime_example: ");
+                printf("ec_perf_encode: ");
                 perf_print(start, (long long)(sz) * (m) * rtest);
 
                 // Start decode test
@@ -829,7 +826,7 @@ int main(int argc, char *argv[])
                     ec_encode_data_avx512(sz, k, m - k, g_tbls, buffs, &buffs[k]);
                 }
                 perf_stop(&start);
-                printf("ec_perf_runtime_example: ");
+                printf("ec_perf_encode: ");
                 perf_print(start, (long long)(sz) * (m) * rtest);
 
                 // Start decode test
@@ -869,7 +866,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    printf("ec_perf_runtime_example: ");
+    printf("ec_perf_decode: ");
     perf_print(start, (long long)(sz) * (k + nerrs) * rtest);
 
     printf("done all: Pass\n");
