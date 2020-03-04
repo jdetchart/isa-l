@@ -252,6 +252,9 @@ void ec_encode_data_avx(int len, int k, int rows, unsigned char *gftbls, unsigne
 void ec_encode_data_avx2(int len, int k, int rows, unsigned char *gftbls, unsigned char **data,
 			 unsigned char **coding);
 
+
+void ec_encode_data_avx512(int len, int k, int rows, unsigned char *gftbls, unsigned char **data,
+			 unsigned char **coding);
 /**
  * @brief Generate update for encode or decode of erasure codes from single source.
  *

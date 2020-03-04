@@ -130,7 +130,7 @@ endif
 CCAS = $(as_filter)
 EXTRA_DIST += tools/yasm-filter.sh tools/nasm-filter.sh
 
-AM_CFLAGS = ${my_CFLAGS} ${INCLUDE} $(src_include) ${D}
+AM_CFLAGS = ${my_CFLAGS} ${INCLUDE} $(src_include) ${D} -pthread
 if CPU_AARCH64
 AM_CCASFLAGS = ${AM_CFLAGS}
 else

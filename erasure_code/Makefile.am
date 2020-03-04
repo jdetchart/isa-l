@@ -76,6 +76,7 @@ lsrc_x86_64  += \
 		erasure_code/gf_6vect_mad_avx2.asm \
 		erasure_code/ec_multibinary.asm
 
+#define HAVE_AVX512
 #if HAVE_AVX512
 lsrc_x86_64  += \
 		erasure_code/gf_vect_dot_prod_avx512.asm \
