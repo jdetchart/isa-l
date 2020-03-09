@@ -428,7 +428,7 @@ void* run_decoding_avx512(isa_mt_struct_t* s)
             k_buffs[i] = s->copy_kbuffs[i] + start;
         }
         //
-        //ec_encode_data_avx512(sz, k, m, g_tbls, k_buffs, r_buffs);
+        ec_encode_data_avx512(sz, k, m, g_tbls, k_buffs, r_buffs);
 
         pthread_barrier_wait(barrier);
     }
@@ -818,11 +818,12 @@ int main(int argc, char *argv[])
                 break;
 #ifdef HAVE_AS_KNOWS_AVX512
              case INTEL_AVX512:
+		ec_init_tables(k, m - k, &a[k * k], g_tbls);
                  // Start encode test
                 perf_start(&start);
                 for (rtest = 0; rtest < l; rtest++) {
                     // Make parity vects
-                    ec_init_tables(k, m - k, &a[k * k], g_tbls);
+                    //ec_init_tables(k, m - k, &a[k * k], g_tbls);
                     ec_encode_data_avx512(sz, k, m - k, g_tbls, buffs, &buffs[k]);
                 }
                 perf_stop(&start);
