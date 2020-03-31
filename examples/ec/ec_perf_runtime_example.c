@@ -26,7 +26,8 @@ typedef enum instruction_set
     INTEL_SSE = 0,
     INTEL_AVX,
     INTEL_AVX2,
-    INTEL_AVX512
+    INTEL_AVX512,
+    ARM_NEON
 } instruction_set_t;
 
 instruction_set_t instr = 0;
@@ -72,6 +73,10 @@ void parse_args(int argc, char**argv)
                     instr = INTEL_AVX2;
 #endif
                 }
+                if (strncmp(optarg, "neon", 4) == 0)
+                {
+                    instr = ARM_NEON
+                }
                 break;
             case 't':
                 t = atoi(optarg);
@@ -99,6 +104,9 @@ void print_params()
             break;
         case INTEL_AVX512:
             printf("i:AVX512\n");
+            break;
+        case: ARM_NEON:
+            printf("i:ARM_NEON\n");
             break;
     }
     printf("t:%d\n", t);
@@ -186,7 +194,7 @@ isa_mt_struct_t* create_mt_decoding_struct(size_t id, int nb_threads, int sz, in
 
     return s;
 }
-
+#ifdef __x86_64__
 void* run_encoding_sse(isa_mt_struct_t* s)
 {
     int sz = s->sz;
@@ -434,7 +442,73 @@ void* run_decoding_avx512(isa_mt_struct_t* s)
     }
     return NULL;
 }
+#endif
 
+#ifdef __arm__
+
+void* run_encoding_neon(isa_mt_struct_t* s)
+{
+    int sz = s->sz;
+    int k = s->k;
+    int m = s->m;
+    u8* g_tbls = s->g_tbls;
+    u8**k_buffs = s->k_buffs;
+    u8**r_buffs = s->r_buffs;
+    pthread_barrier_t* barrier = s->barrier;
+    pthread_barrier_wait(barrier);
+    //printf("thread ready (avx2)\n");
+
+    while (1)
+    {
+        //printf("waiting orders\n");
+        pthread_barrier_wait(barrier); // this barrier triggers the code execution
+        if (*(s->stop) >0) {
+            //printf("stop\n");
+            return NULL;
+        }
+        //
+        ec_encode_data_neon(sz, k, m, g_tbls, k_buffs, r_buffs);
+
+        pthread_barrier_wait(barrier);
+    }
+    return NULL;
+}
+
+void* run_decoding_neon(isa_mt_struct_t* s)
+{
+    int sz = s->sz;
+    int k = s->k;
+    int m = s->m;
+    size_t start = s->start;
+    u8* g_tbls = s->g_tbls;
+    u8**k_buffs = s->k_buffs;
+    u8**r_buffs = s->r_buffs;
+    pthread_barrier_t* barrier = s->barrier;
+    pthread_barrier_wait(barrier);
+    //printf("thread ready (avx2)\n");
+    int i;
+
+    while (1)
+    {
+        //printf("waiting orders\n");
+        pthread_barrier_wait(barrier); // this barrier triggers the code execution
+        if (*(s->stop) >0) {
+            //printf("stop\n");
+            return NULL;
+        }
+
+        for (i=0; i < k; i++)
+        {
+            k_buffs[i] = s->copy_kbuffs[i] + start;
+        }
+        //
+        ec_encode_data_neon(sz, k, m, g_tbls, k_buffs, r_buffs);
+
+        pthread_barrier_wait(barrier);
+    }
+    return NULL;
+}
+#endif
 
 void run_threads(pthread_barrier_t *b)
 {
@@ -584,6 +658,7 @@ int main(int argc, char *argv[])
 
             switch(instr)
             {
+#ifdef __x86_64__
                 case INTEL_SSE:
                     pthread_create(&(threads[i]), NULL,  (void *(*)(void*))run_encoding_sse, (void*)mt_params);
                     break;
@@ -596,6 +671,12 @@ int main(int argc, char *argv[])
 #ifdef HAVE_AS_KNOWS_AVX512
                 case INTEL_AVX512:
                     pthread_create(&(threads[i]), NULL,  (void *(*)(void*))run_encoding_avx512, (void*)mt_params);
+                    break;
+#endif
+#endif
+#ifdef __arm__
+                case ARM_NEON:
+                    pthread_create(&(threads[i]), NULL,  (void *(*)(void*))run_encoding_neon, (void*)mt_params);
                     break;
 #endif
             }
@@ -642,6 +723,7 @@ int main(int argc, char *argv[])
 
             switch(instr)
             {
+#ifdef __x86_64__
                 case INTEL_SSE:
                     pthread_create(&(threads[i]), NULL,  (void *(*)(void*))run_decoding_sse, (void*)mt_params);
                     break;
@@ -654,6 +736,12 @@ int main(int argc, char *argv[])
 #ifdef HAVE_AS_KNOWS_AVX512
                 case INTEL_AVX512:
                     pthread_create(&(threads[i]), NULL,  (void *(*)(void*))run_decoding_avx512, (void*)mt_params);
+                    break;
+#endif
+#endif
+#ifdef __arm__
+                case INTEL_AVX512:
+                    pthread_create(&(threads[i]), NULL,  (void *(*)(void*))run_decoding_neon, (void*)mt_params);
                     break;
 #endif
             }
@@ -700,6 +788,7 @@ int main(int argc, char *argv[])
     }else{
         switch(instr)
         {
+#ifdef __x86_64__
             case INTEL_SSE:
                 // Start encode test
                 perf_start(&start);
@@ -858,6 +947,50 @@ int main(int argc, char *argv[])
                 perf_stop(&start);
                 break;
 #endif
+#endif
+#ifdef __arm__
+            case ARM_NEON:
+		        ec_init_tables(k, m - k, &a[k * k], g_tbls);
+                 // Start encode test
+                perf_start(&start);
+                for (rtest = 0; rtest < l; rtest++) {
+                    // Make parity vects
+                    //ec_init_tables(k, m - k, &a[k * k], g_tbls);
+                    ec_encode_data_neon(sz, k, m - k, g_tbls, buffs, &buffs[k]);
+                }
+                perf_stop(&start);
+                printf("ec_perf_encode: ");
+                perf_print(start, (long long)(sz) * (m) * rtest);
+
+                // Start decode test
+                perf_start(&start);
+                for (rtest = 0; rtest < l; rtest++) {
+                    // Construct b by removing error rows
+                    for (i = 0, r = 0; i < k; i++, r++) {
+                        while (src_in_err[r])
+                            r++;
+                        recov[i] = buffs[r];
+                        for (j = 0; j < k; j++)
+                            b[k * i + j] = a[k * r + j];
+                    }
+
+                    if (gf_invert_matrix(b, d, k) < 0) {
+                        printf("BAD MATRIX\n");
+                        return -1;
+                    }
+
+                    for (i = 0; i < nerrs; i++)
+                        for (j = 0; j < k; j++)
+                            c[k * i + j] = d[k * src_err_list[i] + j];
+
+                    // Recover data
+                    ec_init_tables(k, nerrs, c, g_tbls);
+                    ec_encode_data_neon(sz, k, nerrs, g_tbls, recov, temp_buffs);
+                }
+                perf_stop(&start);
+                break;
+#endif
+
         }
     }
     /*
