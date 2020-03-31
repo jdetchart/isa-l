@@ -444,7 +444,7 @@ void* run_decoding_avx512(isa_mt_struct_t* s)
 }
 #endif
 
-#ifdef __arm__
+#ifdef __aarch64__
 
 void* run_encoding_neon(isa_mt_struct_t* s)
 {
@@ -674,7 +674,7 @@ int main(int argc, char *argv[])
                     break;
 #endif
 #endif
-#ifdef __arm__
+#ifdef __aarch64__
                 case ARM_NEON:
                     pthread_create(&(threads[i]), NULL,  (void *(*)(void*))run_encoding_neon, (void*)mt_params);
                     break;
@@ -739,7 +739,7 @@ int main(int argc, char *argv[])
                     break;
 #endif
 #endif
-#ifdef __arm__
+#ifdef __aarch64__
                 case INTEL_AVX512:
                     pthread_create(&(threads[i]), NULL,  (void *(*)(void*))run_decoding_neon, (void*)mt_params);
                     break;
@@ -948,7 +948,7 @@ int main(int argc, char *argv[])
                 break;
 #endif
 #endif
-#ifdef __arm__
+#ifdef __aarch64__
             case ARM_NEON:
 		        ec_init_tables(k, m - k, &a[k * k], g_tbls);
                  // Start encode test
