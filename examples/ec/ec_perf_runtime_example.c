@@ -75,7 +75,7 @@ void parse_args(int argc, char**argv)
                 }
                 if (strncmp(optarg, "neon", 4) == 0)
                 {
-                    instr = ARM_NEON
+                    instr = ARM_NEON;
                 }
                 break;
             case 't':
