@@ -105,7 +105,7 @@ void print_params()
         case INTEL_AVX512:
             printf("i:AVX512\n");
             break;
-        case: ARM_NEON:
+        case ARM_NEON:
             printf("i:ARM_NEON\n");
             break;
     }
