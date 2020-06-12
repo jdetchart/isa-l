@@ -907,12 +907,12 @@ int main(int argc, char *argv[])
                 break;
 #ifdef HAVE_AS_KNOWS_AVX512
              case INTEL_AVX512:
-		ec_init_tables(k, m - k, &a[k * k], g_tbls);
+		         //ec_init_tables(k, m - k, &a[k * k], g_tbls);
                  // Start encode test
                 perf_start(&start);
                 for (rtest = 0; rtest < l; rtest++) {
                     // Make parity vects
-                    //ec_init_tables(k, m - k, &a[k * k], g_tbls);
+                    ec_init_tables(k, m - k, &a[k * k], g_tbls);
                     ec_encode_data_avx512(sz, k, m - k, g_tbls, buffs, &buffs[k]);
                 }
                 perf_stop(&start);
@@ -950,12 +950,12 @@ int main(int argc, char *argv[])
 #endif
 #ifdef __aarch64__
             case ARM_NEON:
-		        ec_init_tables(k, m - k, &a[k * k], g_tbls);
+		        //ec_init_tables(k, m - k, &a[k * k], g_tbls);
                  // Start encode test
                 perf_start(&start);
                 for (rtest = 0; rtest < l; rtest++) {
                     // Make parity vects
-                    //ec_init_tables(k, m - k, &a[k * k], g_tbls);
+                    ec_init_tables(k, m - k, &a[k * k], g_tbls);
                     ec_encode_data_neon(sz, k, m - k, g_tbls, buffs, &buffs[k]);
                 }
                 perf_stop(&start);
